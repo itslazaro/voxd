@@ -1,0 +1,2 @@
+# VOXD app data lives under the user config/data dirs.
+# model / whisper paths are resolved at runtime via app.core.config.

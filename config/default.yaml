@@ -1,0 +1,66 @@
+# VOXD configuration
+# Copy to config/config.yaml (gitignored) to override; the app merges
+# config/default.yaml with config/config.yaml on startup.
+
+version: 1
+
+model:
+  # Path to a ggml Whisper model binary (e.g. ggml-base.en.bin).
+  # Leave empty to auto-detect inside the whisper.cpp installation.
+  path: ""
+  # Language code for transcription (e.g. "en", "de", "fr"). "" = auto.
+  language: "en"
+
+whisper:
+  # Path to whisper-cli (Linux) or whisper-cli.exe (Windows).
+  # Leave empty to auto-detect.
+  bin: ""
+  # Directory containing the whisper.cpp installation used for auto-detection.
+  install_dir: ""
+  threads: 4
+  # Extra CLI flags passed to whisper-cli (list of strings).
+  extra_args: []
+
+audio:
+  sample_rate: 16000
+  channels: 1
+  # Microphone device name/index. "" = system default.
+  device: ""
+  # Seconds of trailing silence to keep before stopping.
+  stop_padding: 0.3
+
+hotkey:
+  # Primary recording toggle. Linux/Wayland: use a GNOME custom keybinding
+  # that runs `voxd --toggle`. Windows: global hotkey via pynput.
+  # Values use pynput naming on Windows, e.g. "<ctrl>+<alt>+space".
+  key: "f8"
+  # When true, hold-to-talk (press = start, release = stop).
+  # When false, push-to-talk toggle (press once = start, again = stop).
+  hold_to_talk: false
+
+typing:
+  # Linux: "ydotool" (Wayland). Windows: "auto" (pyautogui/SendInput).
+  engine: "auto"
+  ydotool_socket: "/run/user/1000/.ydotool_socket"
+  # Chars-per-second pacing to avoid flooding the target app. 0 = no pacing.
+  chars_per_second: 0
+
+cleanup:
+  # Enable the text cleanup layer.
+  enabled: true
+  # Capitalize first letter of each sentence.
+  capitalize: true
+  # Ensure sentences end with a period.
+  add_period: true
+  # Collapse multiple whitespace / newlines into single spaces.
+  collapse_spaces: true
+
+app:
+  # Launch VOXD minimized to the system tray on startup.
+  start_minimized: true
+  # Start the recording daemon on application launch.
+  autostart_daemon: true
+  # Log verbosity: debug | info | warning | error.
+  log_level: "info"
+  # Directory for VOXD logs ("" = platform default under ~/.local/state or %LOCALAPPDATA%).
+  log_dir: ""

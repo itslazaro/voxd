@@ -1,0 +1,47 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.spec
+__pycache__/
+
+# Model binaries (large, not committed)
+*.bin
+models/
+
+# Whisper.cpp source (downloaded at setup time)
+third_party/whisper.cpp/
+
+# Local config / data
+config/config.yaml
+config/config.yml
+data/
+*.log
+logs/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Packaging artifacts
+installers/linux/*.AppImage
+installers/linux/*.deb
+installers/windows/*.exe
+installers/windows/*.iss.dist

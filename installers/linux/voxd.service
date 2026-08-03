@@ -1,0 +1,12 @@
+[Unit]
+Description=VOXD dictation daemon
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/voxd daemon
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

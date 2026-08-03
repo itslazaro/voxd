@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=VOXD
+Comment=Local-first AI voice dictation
+Exec=voxd gui
+Icon=voxd
+Terminal=false
+Categories=Audio;Utility;
+StartupNotify=true
+X-GNOME-Autostart-enabled=true

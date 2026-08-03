@@ -1,0 +1,12 @@
+[Unit]
+Description=ydotool — Wayland input emulation daemon for VOXD
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ydotoold
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

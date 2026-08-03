@@ -62,7 +62,7 @@ def build_engine(conf: dict):
     ysocket = resolve(conf, "typing", "ydotool_socket", None) or None
     engine = resolve(conf, "typing", "engine", "auto")
     stop_padding = float(resolve(conf, "audio", "stop_padding", 0.3))
-    cleanup_opts = resolve(conf, "cleanup", {}) or {}
+    cleanup_opts = conf.get("cleanup", {}) or {}
 
     if not model:
         from app.core.model import find_model

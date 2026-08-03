@@ -133,6 +133,64 @@ def cmd_gui(args) -> int:
     return run_gui(conf, autostart=args.autostart)
 
 
+def cmd_setup(args) -> int:
+    import scripts.setup_whisper as setup
+
+    return setup.main(["--model", args.model, "--install-dir", args.install_dir])
+
+
+def cmd_doctor(args) -> int:
+    """Diagnose the VOXD install (whisper-cli, model, typing engine, audio)."""
+    from app.core.config import resolve
+    from app.core.model import find_model, list_models
+    from app.core.transcriber import TranscriptionError, find_whisper_bin
+
+    logger = logging.getLogger("voxd.doctor")
+    ok = True
+
+    try:
+        binp = find_whisper_bin()
+        logger.info("✓ whisper-cli: %s", binp)
+    except TranscriptionError as exc:
+        logger.warning("✗ whisper-cli: %s", exc)
+        ok = False
+
+    model = find_model()
+    if model:
+        logger.info("✓ model: %s (%s)", model, list_models())
+    else:
+        logger.warning("✗ no model installed (run: voxd setup)")
+        ok = False
+
+    conf = load_config()
+    engine = resolve(conf, "typing", "engine", "auto")
+    if platform_key() == "linux":
+        import shutil
+
+        y = shutil.which("ydotool")
+        sock = resolve(conf, "typing", "ydotool_socket", None)
+        if y and (not sock or Path(sock).exists()):
+            logger.info("✓ typing: ydotool (%s)", y)
+        else:
+            logger.warning("✗ typing: ydotool missing or socket not found")
+            ok = False
+    else:
+        logger.info("~ typing engine: %s (set via config)", engine)
+
+    try:
+        import sounddevice as sd
+
+        devs = sd.query_devices()
+        inputs = sum(1 for d in devs if d["max_input_channels"] > 0)
+        logger.info("✓ audio: %d input device(s) available", inputs)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("✗ audio: %s", exc)
+        ok = False
+
+    logger.info("Health: %s", "OK" if ok else "ISSUES FOUND (run: voxd setup)")
+    return 0 if ok else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="voxd", description="VOXD — local-first AI dictation")
     parser.add_argument("--version", action="version", version=f"VOXD {__version__}")
@@ -142,6 +200,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("daemon", help="Run the background dictation daemon")
     sub.add_parser("gui", help="Launch the system-tray application (default)")
+    sub.add_parser("doctor", help="Check the VOXD install")
+    setup = sub.add_parser("setup", help="Install/build/test whisper.cpp + model")
+    setup.add_argument("--model", default="base.en", help="Whisper model (default base.en)")
+    setup.add_argument("--install-dir", default=None, help="Where to build whisper.cpp")
     toggle = sub.add_parser("toggle", help="Toggle dictation (external trigger)")
     toggle.add_argument("--start", action="store_true", help="Force start")
     toggle.add_argument("--stop", action="store_true", help="Force stop")
@@ -161,6 +223,10 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_daemon(args)
         if command == "toggle":
             return cmd_toggle(args)
+        if command == "setup":
+            return cmd_setup(args)
+        if command == "doctor":
+            return cmd_doctor(args)
         return cmd_gui(args)
     except ConfigError as exc:
         logging.getLogger(__name__).error("Configuration error: %s", exc)

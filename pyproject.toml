@@ -45,6 +45,7 @@ dev = [
 
 [project.scripts]
 voxd = "app.main:main"
+voxd-setup = "scripts.setup_whisper:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

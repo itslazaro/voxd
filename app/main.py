@@ -147,22 +147,30 @@ def cmd_doctor(args) -> int:
 
     logger = logging.getLogger("voxd.doctor")
     ok = True
+    conf = load_config()
 
-    try:
-        binp = find_whisper_bin()
+    configured_bin = resolve(conf, "whisper", "bin", "")
+    configured_model = resolve(conf, "model", "path", "")
+
+    binp = configured_bin if configured_bin and Path(configured_bin).is_file() else ""
+    if not binp:
+        try:
+            binp = find_whisper_bin()
+        except TranscriptionError as exc:
+            logger.warning("✗ whisper-cli: %s", exc)
+            ok = False
+    if binp:
         logger.info("✓ whisper-cli: %s", binp)
-    except TranscriptionError as exc:
-        logger.warning("✗ whisper-cli: %s", exc)
-        ok = False
 
-    model = find_model()
+    model = configured_model if configured_model and Path(configured_model).is_file() else ""
+    if not model:
+        model = find_model()
     if model:
         logger.info("✓ model: %s (%s)", model, list_models())
     else:
         logger.warning("✗ no model installed (run: voxd setup)")
         ok = False
 
-    conf = load_config()
     engine = resolve(conf, "typing", "engine", "auto")
     if platform_key() == "linux":
         import shutil

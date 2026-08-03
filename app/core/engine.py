@@ -113,7 +113,7 @@ class DictationEngine:
 
             self._set_state(EngineState.TRANSCRIBING)
             raw = self.transcriber.transcribe(wav_path)
-            text = clean_text(raw, **self.cleanup_options)
+            text = clean_text(raw, **self._cleanup_kwargs())
             if not text:
                 log.info("Empty transcription; skipping typing")
                 self._set_state(EngineState.IDLE)
@@ -136,6 +136,15 @@ class DictationEngine:
                     (Path(str(wav_path) + ".txt")).unlink(missing_ok=True)
                 except OSError:
                     log.warning("Could not remove temp files", exc_info=True)
+
+    def _cleanup_kwargs(self) -> dict:
+        """Map cleanup config onto clean_text kwargs, ignoring unknown keys.
+
+        ``cleanup.enabled`` toggles the layer entirely.
+        """
+        opts = dict(self.cleanup_options or {})
+        opts.pop("enabled", None)
+        return opts
 
     @staticmethod
     def _max_record_seconds() -> float:

@@ -10,7 +10,7 @@ from app.core.transcriber import Transcriber, TranscriptionError, find_whisper_b
 
 
 def _write_stub_bin(bin_dir: Path) -> Path:
-    """Create a fake whisper-cli that writes a .txt next to the input."""
+    """Create a fake whisper-cli that writes a .txt for -of output."""
     bin_dir.mkdir(parents=True, exist_ok=True)
     exe = bin_dir / "whisper-cli"
     exe.write_text(
@@ -19,10 +19,8 @@ def _write_stub_bin(bin_dir: Path) -> Path:
             #!/usr/bin/env {sys.executable}
             import sys, pathlib
             args = sys.argv[1:]
-            wav = args[args.index('-f')+1]
-            out = args[args.index('--output-dir')+1]
-            pathlib.Path(out).mkdir(parents=True, exist_ok=True)
-            pathlib.Path(wav).with_suffix('.wav.txt').write_text('hello world')
+            out = args[args.index('-of')+1]
+            pathlib.Path(out + '.txt').write_text('hello world')
             """
         ),
         encoding="utf-8",
@@ -40,7 +38,8 @@ def test_transcribe_success(tmp_path):
 
     t = Transcriber(model_path=str(model), whisper_bin=str(exe), language="en", threads=2)
     assert t.transcribe(wav) == "hello world"
-    assert t._command(str(wav), tmp_path)[:3] == [str(exe), "-m", str(model)]
+    cmd = t._command(str(wav), tmp_path / "out")
+    assert cmd[:3] == [str(exe), "-m", str(model)]
 
 
 def test_transcribe_missing_file(tmp_path):

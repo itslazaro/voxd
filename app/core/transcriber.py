@@ -6,6 +6,7 @@ import os
 import platform
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 from app.core.config import user_data_dir
@@ -68,7 +69,7 @@ class Transcriber:
         self.threads = threads
         self.extra_args = extra_args or []
 
-    def _command(self, wav_path: str, output_dir: Path) -> list[str]:
+    def _command(self, wav_path: str, output_prefix: Path) -> list[str]:
         cmd = [
             self.whisper_bin,
             "-m",
@@ -76,8 +77,8 @@ class Transcriber:
             "-f",
             wav_path,
             "-otxt",
-            "--output-dir",
-            str(output_dir),
+            "-of",
+            str(output_prefix),
         ]
         if self.language:
             cmd += ["-l", self.language]
@@ -99,26 +100,31 @@ class Transcriber:
         if not Path(wav_path).is_file():
             raise TranscriptionError(f"Audio file not found: {wav_path}")
 
-        output_dir = Path(wav_path).parent
-        cmd = self._command(wav_path, output_dir)
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            env=self._env(),
-            timeout=600,
-        )
-        if result.returncode != 0:
-            raise TranscriptionError(
-                f"whisper-cli failed ({result.returncode}): {result.stderr.strip()}"
+        # Output prefix in a dedicated temp dir so we never collide with the
+        # input WAV and cleanup is simple. whisper-cli appends ".txt".
+        out_dir = Path(tempfile.mkdtemp(prefix="voxd-transcribe-"))
+        output_prefix = out_dir / "out"
+        cmd = self._command(wav_path, output_prefix)
+        text = ""
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env=self._env(),
+                timeout=600,
             )
-
-        txt = Path(wav_path).with_suffix(".wav.txt")
-        if not txt.is_file():
-            txt = output_dir / f"{Path(wav_path).name}.txt"
-        if txt.is_file():
-            return txt.read_text(encoding="utf-8").strip()
-        return ""
+            if result.returncode != 0:
+                raise TranscriptionError(
+                    f"whisper-cli failed ({result.returncode}): {result.stderr.strip()}"
+                )
+            txt = Path(str(output_prefix) + ".txt")
+            if txt.is_file():
+                text = txt.read_text(encoding="utf-8").strip()
+        finally:
+            # whisper may crash or be killed; ensure temp dir is removed.
+            shutil.rmtree(out_dir, ignore_errors=True)
+        return text
 
 
 def transcribe_file(

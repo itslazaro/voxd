@@ -7,7 +7,7 @@ import platform
 import sys
 import threading
 
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox, QSystemTrayIcon
 
 from app.core.config import project_root
 from app.core.engine import EngineState
@@ -70,7 +70,7 @@ class VoxdApplication:
             self.tray.show_message(
                 "VOXD Error",
                 "Dictation failed. See logs for details.",
-                QMessageBox.Icon.Warning,
+                QSystemTrayIcon.MessageIcon.Warning,
             )
 
     # -- actions --------------------------------------------------------

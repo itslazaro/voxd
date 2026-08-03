@@ -130,7 +130,7 @@ def cmd_gui(args) -> int:
     from app.gui.app import run_gui
 
     conf = load_config()
-    return run_gui(conf, autostart=args.autostart)
+    return run_gui(conf, autostart=not args.no_autostart)
 
 
 def cmd_setup(args) -> int:
@@ -207,7 +207,8 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command")
 
     sub.add_parser("daemon", help="Run the background dictation daemon")
-    sub.add_parser("gui", help="Launch the system-tray application (default)")
+    gui = sub.add_parser("gui", help="Launch the system-tray application (default)")
+    gui.add_argument("--no-autostart", action="store_true", help="Do not autostart the daemon")
     sub.add_parser("doctor", help="Check the VOXD install")
     setup = sub.add_parser("setup", help="Install/build/test whisper.cpp + model")
     setup.add_argument("--model", default="base.en", help="Whisper model (default base.en)")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import platform
 import sys
 import threading
 
@@ -33,7 +34,7 @@ class VoxdApplication:
 
         icon_path = self._icon_path()
         self.tray = VoxdTray(icon_path)
-        self.daemon = Daemon(self.engine, enable_signals=True)
+        self.daemon = Daemon(self.engine, enable_signals=platform.system() == "Linux")
         self.hotkeys = HotkeyService(
             on_toggle=self.toggle,
             key=conf.get("hotkey", {}).get("key", "f8"),

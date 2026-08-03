@@ -36,16 +36,23 @@ class Daemon:
         """Install signal handlers if enabled (idempotent)."""
         if not self._enable_signals or self._installed:
             return
-        for sig in (signal.SIGUSR1, signal.SIGUSR2):
-            signal.signal(sig, self._on_signal)
+        sig_start = getattr(signal, "SIGUSR1", None)
+        sig_stop = getattr(signal, "SIGUSR2", None)
+        if sig_start is None or sig_stop is None:
+            log.warning("SIGUSR1/SIGUSR2 unavailable on this platform; signals disabled")
+            self._enable_signals = False
+            return
+        signal.signal(sig_start, self._on_signal)
+        signal.signal(sig_stop, self._on_signal)
         self._installed = True
         log.info("Signal handlers installed (SIGUSR1=start, SIGUSR2=stop)")
 
     def _on_signal(self, signum, frame) -> None:
-        if signum == signal.SIGUSR1:
+        sig_start = getattr(signal, "SIGUSR1", None)
+        if signum == sig_start:
             log.info("SIGUSR1 → start dictation")
             self.engine.start_recording()
-        elif signum == signal.SIGUSR2:
+        else:
             log.info("SIGUSR2 → stop dictation")
             self.engine.stop_recording()
 

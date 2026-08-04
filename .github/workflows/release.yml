@@ -3,6 +3,12 @@ name: Publish Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag to publish (defaults to the current tag)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -14,18 +20,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve release ref
+        id: resolve
+        env:
+          TARGET_REF: ${{ github.event.inputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${TARGET_REF:-$GITHUB_REF_NAME}"
+          SHA=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.sha' 2>/dev/null || echo "$GITHUB_SHA")
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Publishing tag $TAG (sha $SHA)"
+
       - name: Wait for and collect build artifacts
         env:
           GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ steps.resolve.outputs.sha }}
         run: |
           set -euo pipefail
           for wf in build-windows.yml build-linux.yml; do
             echo "Waiting for $wf..."
             run_id=""
             for _ in $(seq 1 60); do
-              run_id=$(gh run list --workflow "$wf" --commit "$GITHUB_SHA" \
+              run_id=$(gh run list --workflow "$wf" --commit "$TARGET_SHA" \
                 --limit 1 --json databaseId --jq '.[0].databaseId // empty' 2>/dev/null || true)
-              conclusion=$(gh run list --workflow "$wf" --commit "$GITHUB_SHA" \
+              conclusion=$(gh run list --workflow "$wf" --commit "$TARGET_SHA" \
                 --limit 1 --json conclusion --jq '.[0].conclusion // "pending"' 2>/dev/null || echo pending)
               if [ "$conclusion" = "success" ]; then
                 break
@@ -44,13 +63,69 @@ jobs:
             gh run download "$run_id" -D dist
           done
 
+      - name: Write release body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          VER="${TAG#v}"
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG"
+          REPO_URL="https://github.com/$GITHUB_REPOSITORY"
+          cat > release_body.md <<EOF
+          # VOXD $TAG
+
+          **Local-first AI voice dictation.** Hold a hotkey, speak, and VOXD
+          transcribes your words locally with Whisper and types them into any
+          application — your browser, terminal, editor, or chat window. Audio
+          never leaves your machine.
+
+          ## Downloads
+
+          | Platform | File | Notes |
+          |---|---|---|
+          | Windows | [$VER-Setup.exe]($URL/$VER-Setup.exe) | Recommended installer, Start Menu + desktop shortcut |
+          | Windows | [$VER-portable.zip]($URL/$VER-portable.zip) | Portable, no install needed |
+          | Linux | [VOXD-$VER-x86_64.AppImage]($URL/VOXD-$VER-x86_64.AppImage) | Portable AppImage |
+          | Linux | [voxd_\${VER}_amd64.deb]($URL/voxd_\${VER}_amd64.deb) | Debian/Ubuntu package |
+
+          ## Install
+
+          **Windows** — run \`$VER-Setup.exe\`, then open a terminal in the
+          install dir and run \`.\VOXD.exe setup\` once to build whisper-cli and
+          download a model. Launch VOXD from the Start Menu.
+
+          **Linux** — install the deb (\`sudo apt install ./voxd_\${VER}_amd64.deb\`)
+          or \`chmod +x\` the AppImage and run it. Run \`voxd setup\` on first use.
+
+          > First-run setup builds whisper.cpp and downloads a Whisper model.
+          > See the [README]($REPO_URL/blob/main/README.md).
+
+          ## What's new in $TAG
+
+          - **Local Whisper transcription** — whisper.cpp \`whisper-cli\` backend
+          - **System tray app** — live status (Ready / Listening / Transcribing / Writing / Error)
+          - **Linux** — Wayland typing via ydotool, deb + AppImage, GNOME keybinding (Super+V)
+          - **Windows** — native SendInput typing, global hotkey, installer
+          - **First-run setup** — \`voxd setup\` builds whisper.cpp and downloads a model; \`voxd doctor\` diagnoses
+          - **Configurable** — model, language, hotkey, typing engine, cleanup rules
+
+          Full details in the [changelog]($REPO_URL/blob/main/CHANGELOG.md).
+
+          ## Feedback
+
+          Report bugs and request features via [Issues]($REPO_URL/issues).
+          EOF
+
       - name: Remove stale release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release delete "$GITHUB_REF_NAME" --yes || true
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: gh release delete "$TAG" --yes || true
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/**
           fail_on_unmatched_files: true
+          name: VOXD ${{ steps.resolve.outputs.tag }}
+          body_path: release_body.md

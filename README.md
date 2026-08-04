@@ -63,20 +63,20 @@ forever).
 #### Option A — deb package
 
 ```bash
-sudo apt install ./VOXD-1.0.0-amd64.deb
+sudo apt install ./voxd_1.0.1_amd64.deb
 ```
 
 #### Option B — AppImage
 
 ```bash
-chmod +x VOXD-1.0.0-x86_64.AppImage
-./VOXD-1.0.0-x86_64.AppImage
+chmod +x VOXD-1.0.1-x86_64.AppImage
+./VOXD-1.0.1-x86_64.AppImage
 ```
 
 #### Option C — from source
 
 ```bash
-git clone https://github.com/yourname/voxd.git
+git clone https://github.com/itslazaro/voxd.git
 cd voxd
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
@@ -237,7 +237,7 @@ Logs: `~/.local/state/VOXD/logs/voxd.log` (Linux),
 ## Development setup
 
 ```bash
-git clone https://github.com/yourname/voxd.git
+git clone https://github.com/itslazaro/voxd.git
 cd voxd
 python3 -m venv venv
 ./venv/bin/pip install -e ".[dev]"

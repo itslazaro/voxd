@@ -8,6 +8,39 @@ All notable changes to VOXD are documented here. The format follows
 
 - macOS support (planned)
 
+## [1.0.1] — 2026-08-04
+
+### Added
+
+- **Automated Windows install** — the installer now downloads a prebuilt
+  `whisper-cli.exe` + DLLs and a Whisper model at install time. End users need
+  nothing beyond the `Setup.exe`: no Python, git, cmake, or Visual Studio
+  Build Tools. Powered by a new bundled `VOXD-setup.exe` (console, Qt-free)
+  that runs post-install (`app/core/model.py:download_prebuilt_whisper`,
+  `scripts/setup_whisper.py --prebuilt`).
+- **Optional code signing** in CI — set repo variable `ENABLE_CODE_SIGNING=true`
+  plus cert secrets and CI signs `VOXD.exe`, `VOXD-setup.exe`, and the final
+  `*-Setup.exe` (SHA256, Digicert timestamp).
+- **Stitch UI/UX design prompt** (`docs/STITCH_UI_PROMPT.md`) covering
+  Windows, Linux, and macOS (Liquid Glass), including a 3-step "Get Started"
+  onboarding flow.
+- Release page now auto-generates a full description with download links and
+  install instructions per platform.
+
+### Changed
+
+- **UPX packing disabled** in both PyInstaller specs — the biggest source of
+  antivirus false positives for PyInstaller binaries.
+- `find_whisper_bin` now also searches the prebuilt install location
+  (`%LOCALAPPDATA%\VOXD\whisper\Release\`).
+- Windows installer adds a "Download the Whisper engine and model now" task
+  (checked by default).
+
+### Fixed
+
+- `voxd setup` crashed when `--install-dir` was unset (passed `None` to
+  argparse) — `app/main.py:cmd_setup`.
+
 ## [1.0.0] — 2026-08-03
 
 Productized the original Whisper dictation prototype into an installable,
@@ -56,5 +89,6 @@ cross-platform desktop application.
 - Local-first: no audio upload, no telemetry, no API keys.
 - Model downloads pinned to HTTPS (ggml-org mirror).
 
-[Unreleased]: https://github.com/yourname/voxd/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourname/voxd/releases/tag/v1.0.0
+[Unreleased]: https://github.com/itslazaro/voxd/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/itslazaro/voxd/releases/tag/v1.0.1
+[1.0.0]: https://github.com/itslazaro/voxd/releases/tag/v1.0.0

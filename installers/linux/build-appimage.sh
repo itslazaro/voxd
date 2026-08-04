@@ -6,7 +6,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/../.."
 VERSION="${1:-1.0.0}"
-ARCH="x86_64"
+export ARCH="x86_64"
 APPIMAGE="build/VOXD-${VERSION}-${ARCH}.AppImage"
 
 TOOLS="build/tools"
@@ -50,7 +50,7 @@ Comment=Local-first AI voice dictation
 Exec=voxd gui
 Icon=voxd
 Terminal=false
-Categories=Audio;Utility;
+Categories=AudioVideo;Audio;Utility;
 StartupNotify=true
 EOF
 cp assets/icons/voxd.svg "$APPDIR/usr/share/icons/hicolor/scalable/apps/voxd.svg"

@@ -12,7 +12,6 @@ env/
 build/
 dist/
 *.egg-info/
-*.spec
 __pycache__/
 
 # Model binaries (large, not committed)

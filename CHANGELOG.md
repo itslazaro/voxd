@@ -8,6 +8,16 @@ All notable changes to VOXD are documented here. The format follows
 
 - macOS support (planned)
 
+## [1.0.3] — 2026-08-05
+
+### Fixed
+
+- **Launching the AppImage (no subcommand) crashed** with
+  `AttributeError: 'Namespace' object has no attribute 'no_autostart'` — the
+  `--no-autostart` flag only existed on the `gui` subparser, but the default
+  command (no subcommand) routed to `cmd_gui` with a namespace that lacked it.
+  `cmd_gui` now uses `getattr(args, "no_autostart", False)`.
+
 ## [1.0.2] — 2026-08-05
 
 ### Fixed
@@ -100,7 +110,8 @@ cross-platform desktop application.
 - Local-first: no audio upload, no telemetry, no API keys.
 - Model downloads pinned to HTTPS (ggml-org mirror).
 
-[Unreleased]: https://github.com/itslazaro/voxd/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/itslazaro/voxd/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/itslazaro/voxd/releases/tag/v1.0.3
 [1.0.2]: https://github.com/itslazaro/voxd/releases/tag/v1.0.2
 [1.0.1]: https://github.com/itslazaro/voxd/releases/tag/v1.0.1
 [1.0.0]: https://github.com/itslazaro/voxd/releases/tag/v1.0.0

@@ -137,7 +137,7 @@ def cmd_gui(args) -> int:
     from app.gui.app import run_gui
 
     conf = load_config()
-    return run_gui(conf, autostart=not args.no_autostart)
+    return run_gui(conf, autostart=not getattr(args, "no_autostart", False))
 
 
 def cmd_setup(args) -> int:

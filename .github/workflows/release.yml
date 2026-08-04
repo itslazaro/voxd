@@ -83,18 +83,18 @@ jobs:
 
           | Platform | File | Notes |
           |---|---|---|
-          | Windows | [$VER-Setup.exe]($URL/$VER-Setup.exe) | Recommended installer, Start Menu + desktop shortcut |
-          | Windows | [$VER-portable.zip]($URL/$VER-portable.zip) | Portable, no install needed |
+          | Windows | [VOXD-$VER-Setup.exe]($URL/VOXD-$VER-Setup.exe) | Recommended installer, Start Menu + desktop shortcut |
+          | Windows | [VOXD-$VER-portable.zip]($URL/VOXD-$VER-portable.zip) | Portable, no install needed |
           | Linux | [VOXD-$VER-x86_64.AppImage]($URL/VOXD-$VER-x86_64.AppImage) | Portable AppImage |
-          | Linux | [voxd_\${VER}_amd64.deb]($URL/voxd_\${VER}_amd64.deb) | Debian/Ubuntu package |
+          | Linux | [voxd_${VER}_amd64.deb]($URL/voxd_${VER}_amd64.deb) | Debian/Ubuntu package |
 
           ## Install
 
-          **Windows** — run \`$VER-Setup.exe\`, then open a terminal in the
+          **Windows** — run \`VOXD-$VER-Setup.exe\`, then open a terminal in the
           install dir and run \`.\VOXD.exe setup\` once to build whisper-cli and
           download a model. Launch VOXD from the Start Menu.
 
-          **Linux** — install the deb (\`sudo apt install ./voxd_\${VER}_amd64.deb\`)
+          **Linux** — install the deb (\`sudo apt install ./voxd_${VER}_amd64.deb\`)
           or \`chmod +x\` the AppImage and run it. Run \`voxd setup\` on first use.
 
           > First-run setup builds whisper.cpp and downloads a Whisper model.

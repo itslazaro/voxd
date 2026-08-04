@@ -33,7 +33,9 @@ cp -r app "$APPDIR/usr/lib/voxd/app"
 cp -r assets "$APPDIR/usr/lib/voxd/assets"
 mkdir -p "$APPDIR/usr/lib/voxd/config"
 cp config/default.yaml "$APPDIR/usr/lib/voxd/config/default.yaml"
-cp scripts/setup_whisper.py "$APPDIR/usr/lib/voxd/setup_whisper.py"
+mkdir -p "$APPDIR/usr/lib/voxd/scripts"
+cp scripts/__init__.py "$APPDIR/usr/lib/voxd/scripts/__init__.py" 2>/dev/null || true
+cp scripts/setup_whisper.py "$APPDIR/usr/lib/voxd/scripts/setup_whisper.py"
 
 cat > "$APPDIR/usr/bin/voxd" <<EOF
 #!/usr/bin/env bash

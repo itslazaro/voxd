@@ -92,6 +92,9 @@ cp -r app "$STAGE/usr/share/voxd/app"
 cp -r assets "$STAGE/usr/share/voxd/assets"
 mkdir -p "$STAGE/usr/share/voxd/config"
 cp config/default.yaml "$STAGE/usr/share/voxd/config/default.yaml"
+mkdir -p "$STAGE/usr/share/voxd/scripts"
+cp scripts/__init__.py "$STAGE/usr/share/voxd/scripts/__init__.py" 2>/dev/null || true
+cp scripts/setup_whisper.py "$STAGE/usr/share/voxd/scripts/setup_whisper.py"
 cp config/default.yaml "$STAGE/etc/voxd/default.yaml"
 
 # --- build python venv into the package ---

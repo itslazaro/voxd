@@ -102,13 +102,18 @@ verification transcription.
    [Releases page](https://github.com/itslazaro/voxd/releases) (or unzip the
    portable build). Run the installer — it creates a `VOXD` entry in the
    Start Menu and, optionally, a desktop icon and login autostart.
-2. Open a terminal in the install dir and run:
-   ```powershell
-   .\VOXD.exe setup
-   ```
-3. Launch `VOXD.exe`. Use the tray menu or the global hotkey to dictate.
+2. The installer **automatically downloads the Whisper engine and a model**
+   (no Python, git, cmake, or Visual Studio Build Tools needed). A checkbox
+   on the installer lets you skip this and run `VOXD-setup.exe` later.
+3. Launch `VOXD.exe`. Use the tray menu or the global hotkey (default **F8**)
+   to dictate.
 
-> Building on Windows requires Visual Studio Build Tools (for whisper.cpp).
+> First launch may show a SmartScreen / Chrome warning because the installer
+> is unsigned. Click **More info → Run anyway** (SmartScreen) or **Keep**
+> (Chrome). See `installers/windows/README.md` for the signing roadmap.
+
+> Building whisper.cpp from source is still supported for power users:
+> `VOXD-setup.exe --no-prebuilt` (requires git + cmake + VS Build Tools).
 > See `installers/windows/README.md`.
 
 ---

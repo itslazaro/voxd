@@ -90,15 +90,19 @@ jobs:
 
           ## Install
 
-          **Windows** — run \`VOXD-$VER-Setup.exe\`, then open a terminal in the
-          install dir and run \`.\VOXD.exe setup\` once to build whisper-cli and
-          download a model. Launch VOXD from the Start Menu.
+          **Windows** — run \`VOXD-$VER-Setup.exe\`. The installer
+          automatically downloads the Whisper engine and a model (no Python,
+          git, cmake, or build tools needed), then launches VOXD. Use the
+          tray menu or the **F8** hotkey to dictate.
 
           **Linux** — install the deb (\`sudo apt install ./voxd_${VER}_amd64.deb\`)
-          or \`chmod +x\` the AppImage and run it. Run \`voxd setup\` on first use.
+          or \`chmod +x\` the AppImage and run it, then run \`voxd setup\` once
+          to build whisper.cpp and download a model.
 
-          > First-run setup builds whisper.cpp and downloads a Whisper model.
-          > See the [README]($REPO_URL/blob/main/README.md).
+          > First launch may show a SmartScreen / Chrome warning because the
+          > installer is unsigned — click **More info → Run anyway** (SmartScreen)
+          > or **Keep** (Chrome). See the
+          > [README]($REPO_URL/blob/main/README.md).
 
           ## What's new in $TAG
 

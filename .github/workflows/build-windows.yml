@@ -30,6 +30,31 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller --noconfirm --clean installers/windows/voxd.spec
 
+      - name: Build first-run setup tool
+        run: pyinstaller --noconfirm --clean installers/windows/voxd-setup.spec
+
+      - name: Bundle setup tool into the app folder
+        shell: pwsh
+        run: |
+          if (Test-Path dist\VOXD-setup.exe) {
+            Copy-Item dist\VOXD-setup.exe dist\VOXD\VOXD-setup.exe -Force
+          }
+
+      - name: Code sign binaries (optional)
+        if: ${{ vars.ENABLE_CODE_SIGNING == 'true' }}
+        shell: pwsh
+        env:
+          CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:TEMP "voxd_cert.pfx"
+          [System.Convert]::FromBase64String($env:CERT_PFX_BASE64) | Set-Content -Path $pfx -AsByteStream
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Select-Object -Last 1
+          if (-not $signtool) { Write-Error "signtool.exe not found in Windows SDK"; exit 1 }
+          $targets = @("dist\VOXD\VOXD.exe", "dist\VOXD\VOXD-setup.exe") | Where-Object { Test-Path $_ }
+          & $signtool.FullName sign /f $pfx /p $env:CERT_PASSWORD /fd SHA256 `
+            /tr http://timestamp.digicert.com /td SHA256 $targets
+
       - name: Install Inno Setup
         run: choco install innosetup -y
 
@@ -45,6 +70,20 @@ jobs:
             where iscc
             iscc /DMyAppVersion=%VOXD_VERSION% installers\windows\voxd.iss
           )
+
+      - name: Code sign installer (optional)
+        if: ${{ vars.ENABLE_CODE_SIGNING == 'true' }}
+        shell: pwsh
+        env:
+          CERT_PFX_BASE64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:TEMP "voxd_cert.pfx"
+          [System.Convert]::FromBase64String($env:CERT_PFX_BASE64) | Set-Content -Path $pfx -AsByteStream
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" -ErrorAction SilentlyContinue | Select-Object -Last 1
+          $setup = Get-ChildItem "build\windows\*-Setup.exe"
+          & $signtool.FullName sign /f $pfx /p $env:CERT_PASSWORD /fd SHA256 `
+            /tr http://timestamp.digicert.com /td SHA256 $setup.FullName
 
       - name: Package portable build
         shell: pwsh

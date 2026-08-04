@@ -24,8 +24,12 @@ pip install -r requirements.txt pyinstaller
 echo ==^> Building model discovery icon (ICO)
 python -c "import sys; sys.path.insert(0,'.'); from app.core.model import MODELS; print(len(MODELS),'models registered')"
 
-echo ==^> PyInstaller build
+echo ==^> PyInstaller build (VOXD.exe)
 pyinstaller --noconfirm --clean installers\windows\voxd.spec
+
+echo ==^> PyInstaller build (VOXD-setup.exe)
+pyinstaller --noconfirm --clean installers\windows\voxd-setup.spec
+if exist dist\VOXD-setup.exe copy /y dist\VOXD-setup.exe dist\VOXD\VOXD-setup.exe >nul
 
 echo ==^> Building installer with Inno Setup (if ISCC available)
 where iscc >nul 2>&1

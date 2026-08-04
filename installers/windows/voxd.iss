@@ -32,6 +32,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "startup"; Description: "Launch VOXD at login"; GroupDescription: "Startup:"
+Name: "runsetup"; Description: "Download the Whisper engine and model now (recommended, ~85 MB)"; GroupDescription: "First-run setup:"; Flags: checkedonce
 
 [Files]
 Source: "..\..\dist\VOXD\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -42,6 +43,11 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: startup
 
 [Run]
+; First-run setup: download prebuilt whisper-cli.exe + a Whisper model, verify,
+; then write config. Runs during install (before the Finish page). A console
+; window shows download progress. Skippable via the "runsetup" task.
+Filename: "{app}\VOXD-setup.exe"; Parameters: "--prebuilt"; StatusMsg: "Setting up Whisper engine and model (this takes a few minutes)..."; Tasks: runsetup; Flags: runhidden
+
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]

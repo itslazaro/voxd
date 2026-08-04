@@ -8,11 +8,21 @@ import platform
 import shutil
 import subprocess
 import urllib.request
+import zipfile
 from pathlib import Path
 
 from app.core.config import user_data_dir
 
 log = logging.getLogger(__name__)
+
+# Pinned whisper.cpp release whose prebuilt Windows binaries we download at
+# install time. Override with the VOXD_WHISPER_TAG env var to pick another.
+WHISPER_CPP_TAG = os.environ.get("VOXD_WHISPER_TAG", "v1.9.2")
+WHISPER_PREBUILT_ASSET = "whisper-bin-x64.zip"
+WHISPER_PREBUILT_URL = (
+    f"https://github.com/ggml-org/whisper.cpp/releases/download/"
+    f"{WHISPER_CPP_TAG}/{WHISPER_PREBUILT_ASSET}"
+)
 
 # Known small models available from whisper.cpp's release mirror.
 MODELS = {
@@ -92,6 +102,60 @@ def download_model(name: str, progress: callable | None = None) -> Path:
     tmp.replace(dest)
     log.info("Downloaded model %s", filename)
     return dest
+
+
+def whisper_install_dir() -> Path:
+    """Where the prebuilt (or built) whisper-cli lives."""
+    return user_data_dir() / "whisper"
+
+
+def download_prebuilt_whisper(
+    dest: Path | None = None,
+    progress: callable | None = None,
+) -> Path:
+    """Download the prebuilt whisper.cpp Windows binaries and return whisper-cli.exe.
+
+    Extracts whisper-bin-x64.zip into the user data dir. The archive ships a
+    ``Release/`` folder containing ``whisper-cli.exe`` and its DLLs. Idempotent:
+    if whisper-cli.exe is already present, it is not re-downloaded.
+    """
+    if platform.system() != "Windows":
+        raise RuntimeError("Prebuilt whisper download is Windows-only")
+
+    base = dest or whisper_install_dir()
+    exe_path = base / "Release" / "whisper-cli.exe"
+    if exe_path.exists():
+        log.info("Prebuilt whisper-cli already present at %s", exe_path)
+        return exe_path
+
+    base.mkdir(parents=True, exist_ok=True)
+    tmp_zip = base / "whisper-bin-x64.zip"
+
+    def _report(block_num, block_size, total_size):
+        if progress and total_size > 0:
+            progress(block_num * block_size, total_size)
+
+    log.info("Downloading prebuilt whisper.cpp from %s", WHISPER_PREBUILT_URL)
+    urllib.request.urlretrieve(  # noqa: S310 - pinned HTTPS URL above
+        WHISPER_PREBUILT_URL, tmp_zip, reporthook=_report
+    )
+    try:
+        with zipfile.ZipFile(tmp_zip) as zf:
+            zf.extractall(base)
+    finally:
+        tmp_zip.unlink(missing_ok=True)
+
+    if not exe_path.exists():
+        # The archive layout may change; locate whisper-cli.exe anywhere inside.
+        found = list(base.rglob("whisper-cli.exe"))
+        if not found:
+            raise RuntimeError(
+                f"whisper-cli.exe not found after extracting {WHISPER_PREBUILT_ASSET}"
+            )
+        exe_path = found[0]
+
+    log.info("Prebuilt whisper-cli ready at %s", exe_path)
+    return exe_path
 
 
 def download_gguf(name: str) -> Path:

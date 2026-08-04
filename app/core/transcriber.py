@@ -34,7 +34,9 @@ def find_whisper_bin() -> str:
     install_dir = os.environ.get("VOXD_WHISPER_DIR")
     if install_dir:
         candidates.append(str(Path(install_dir) / "build" / "bin" / exe))
+        candidates.append(str(Path(install_dir) / "Release" / exe))
 
+    candidates.append(str(user_data_dir() / "whisper" / "Release" / exe))
     candidates.append(str(user_data_dir() / "whisper.cpp" / "build" / "bin" / exe))
 
     for cand in candidates:

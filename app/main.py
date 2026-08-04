@@ -143,7 +143,10 @@ def cmd_gui(args) -> int:
 def cmd_setup(args) -> int:
     import scripts.setup_whisper as setup
 
-    return setup.main(["--model", args.model, "--install-dir", args.install_dir])
+    argv = ["--model", args.model]
+    if args.install_dir:
+        argv += ["--install-dir", args.install_dir]
+    return setup.main(argv)
 
 
 def cmd_doctor(args) -> int:

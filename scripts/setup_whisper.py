@@ -28,7 +28,7 @@ def _check_command(name: str) -> str | None:
 
 
 def _check_prereqs() -> list[str]:
-    """Return a list of missing build prerequisites."""
+    """Return a list of missing build prerequisites (only needed for build mode)."""
     missing = []
     for tool in ("git", "cmake"):
         if not _check_command(tool):
@@ -44,7 +44,19 @@ def _check_prereqs() -> list[str]:
 def install_dir(arg: str | None) -> Path:
     from app.core.config import user_data_dir
 
-    return Path(arg) if arg else user_data_dir() / "whisper.cpp"
+    return Path(arg) if arg else user_data_dir() / "whisper"
+
+
+def setup_prebuilt(model_name: str) -> tuple[Path, Path]:
+    """Download the prebuilt whisper-cli.exe + a model (no build tools needed)."""
+    from app.core.model import download_model, download_prebuilt_whisper
+
+    log.info("==> Installing prebuilt whisper.cpp (no build tools required)")
+    bin_path = download_prebuilt_whisper()
+
+    log.info("==> Downloading model %s", model_name)
+    model_path = download_model(model_name)
+    return bin_path, model_path
 
 
 def build_whisper(dest: Path, model_name: str) -> tuple[Path, Path]:
@@ -103,24 +115,29 @@ def verify_transcription(bin_path: Path, model_path: Path) -> float:
     return len(text)
 
 
-def run_setup(model_name: str, dest: str | None) -> int:
-    missing = _check_prereqs()
-    if missing:
-        log.error("Missing prerequisites: %s", ", ".join(missing))
-        log.error("Install them first, e.g.:")
-        log.error("  sudo apt install git cmake build-essential   (Debian/Ubuntu/Kali)")
-        log.error("  sudo dnf install git cmake gcc-c++           (Fedora)")
-        return 1
+def run_setup(model_name: str, dest: str | None, prebuilt: bool) -> int:
+    if prebuilt:
+        bin_path, model_path = setup_prebuilt(model_name)
+    else:
+        missing = _check_prereqs()
+        if missing:
+            log.error("Missing prerequisites: %s", ", ".join(missing))
+            log.error("Install them first, e.g.:")
+            log.error("  sudo apt install git cmake build-essential   (Debian/Ubuntu/Kali)")
+            log.error("  sudo dnf install git cmake gcc-c++           (Fedora)")
+            log.error("  Visual Studio Build Tools + cmake + git      (Windows)")
+            log.error("Tip: on Windows, re-run with --prebuilt (default) to skip build tools.")
+            return 1
 
-    dest_path = install_dir(dest)
-    bin_path, model_path = build_whisper(dest_path, model_name)
+        dest_path = install_dir(dest)
+        bin_path, model_path = build_whisper(dest_path, model_name)
 
     # Configure VOXD to use these.
     from app.core.config import load_config, save_user_config
 
     conf = load_config()
     conf["whisper"]["bin"] = str(bin_path)
-    conf["whisper"]["install_dir"] = str(dest_path)
+    conf["whisper"]["install_dir"] = str(Path(bin_path).parent.parent)
     conf["model"]["path"] = str(model_path)
     save_user_config(conf)
     log.info("Wrote config.yaml: whisper.bin=%s", bin_path)
@@ -136,11 +153,31 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--model", default="base.en", help="Whisper model (default base.en)")
     parser.add_argument("--install-dir", default=None, help="Where to build whisper.cpp")
+    # Default to prebuilt on Windows (no build tools needed); build elsewhere.
+    default_prebuilt = platform.system() == "Windows"
+    parser.add_argument(
+        "--prebuilt",
+        action=argparse.BooleanOptionalAction,
+        default=default_prebuilt,
+        help="Download prebuilt whisper-cli.exe (default on Windows) instead of building",
+    )
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+    # Also persist to a log file so runs hidden by the installer are debuggable.
     try:
-        return run_setup(args.model, args.install_dir)
+        from app.core.config import user_state_dir
+
+        log_dir = user_state_dir() / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        fh = logging.FileHandler(log_dir / "voxd-setup.log", encoding="utf-8")
+        fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
+        logging.getLogger().addHandler(fh)
+    except Exception:  # noqa: BLE001
+        pass
+
+    try:
+        return run_setup(args.model, args.install_dir, args.prebuilt)
     except (RuntimeError, subprocess.CalledProcessError) as exc:
         log.error("Setup failed: %s", exc)
         return 1

@@ -11,7 +11,7 @@ import numpy as np
 
 try:
     import sounddevice as sd
-except ImportError:  # pragma: no cover - only used on systems without deps
+except (ImportError, OSError):  # pragma: no cover - no PortAudio / no sounddevice
     sd = None
 
 
@@ -26,8 +26,6 @@ class Recorder:
     """
 
     def __init__(self, sample_rate: int = 16000, channels: int = 1, device: str | None = None):
-        if sd is None:  # pragma: no cover
-            raise RecordingError("sounddevice is not installed")
         self.sample_rate = sample_rate
         self.channels = channels
         self.device = device
@@ -47,6 +45,8 @@ class Recorder:
                 self._buffer.append(indata.copy())
 
     def start(self) -> None:
+        if sd is None:  # pragma: no cover
+            raise RecordingError("sounddevice is not installed")
         with self._lock:
             if self._recording:
                 return

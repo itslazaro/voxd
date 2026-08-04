@@ -46,28 +46,15 @@ jobs:
             iscc /DMyAppVersion=%VOXD_VERSION% installers\windows\voxd.iss
           )
 
+      - name: Package portable build
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist\VOXD -DestinationPath "build\windows\VOXD-${{ steps.version.outputs.VERSION }}-portable.zip" -Force
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: voxd-windows
           path: |
-            build/windows/VOXD*
-            dist/VOXD*
-
-  release:
-    name: Attach to GitHub Release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: voxd-windows
-          path: dist/
-
-      - name: Publish Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/**
+            build/windows/*-Setup.exe
+            build/windows/*-portable.zip

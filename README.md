@@ -44,7 +44,7 @@ release publishes ready-to-run installers built by CI:
 | Platform | File | Notes |
 |---|---|---|
 | Windows | `VOXD-<version>-Setup.exe` | Recommended — Inno Setup installer, adds Start Menu / desktop shortcuts |
-| Windows | `VOXD/` folder | Portable PyInstaller build, no install needed |
+| Windows | `VOXD-<version>-portable.zip` | Portable PyInstaller build, no install needed |
 | Linux | `VOXD-<version>-amd64.deb` | Debian/Ubuntu package |
 | Linux | `VOXD-<version>-x86_64.AppImage` | Portable, works on most distros |
 

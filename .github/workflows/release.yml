@@ -1,0 +1,65 @@
+name: Publish Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Attach builds to GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for build workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for wf in build-windows.yml build-linux.yml; do
+            echo "Waiting for $wf..."
+            ok=""
+            for _ in $(seq 1 60); do
+              conclusion=$(gh api \
+                "repos/$GITHUB_REPOSITORY/actions/workflows/$wf/runs?head_sha=$GITHUB_SHA" \
+                --jq '.workflow_runs[0].conclusion // "pending"')
+              if [ "$conclusion" = "success" ]; then
+                ok=1
+                break
+              fi
+              if [ "$conclusion" = "failure" ]; then
+                echo "::error::$wf failed; not publishing a release."
+                exit 1
+              fi
+              sleep 20
+            done
+            if [ -z "$ok" ]; then
+              echo "::error::Timed out waiting for $wf."
+              exit 1
+            fi
+          done
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: voxd-windows
+          path: dist/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: voxd-linux
+          path: dist/linux
+
+      - name: Remove stale release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release delete "$GITHUB_REF_NAME" --yes || true
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**
+          fail_on_unmatched_files: true

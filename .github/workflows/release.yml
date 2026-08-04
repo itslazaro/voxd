@@ -14,19 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for build workflows
+      - name: Wait for and collect build artifacts
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           for wf in build-windows.yml build-linux.yml; do
             echo "Waiting for $wf..."
-            ok=""
+            run_id=""
             for _ in $(seq 1 60); do
-              conclusion=$(gh api \
-                "repos/$GITHUB_REPOSITORY/actions/workflows/$wf/runs?head_sha=$GITHUB_SHA" \
-                --jq '.workflow_runs[0].conclusion // "pending"')
+              run_id=$(gh run list --workflow "$wf" --commit "$GITHUB_SHA" \
+                --limit 1 --json databaseId --jq '.[0].databaseId // empty' 2>/dev/null || true)
+              conclusion=$(gh run list --workflow "$wf" --commit "$GITHUB_SHA" \
+                --limit 1 --json conclusion --jq '.[0].conclusion // "pending"' 2>/dev/null || echo pending)
               if [ "$conclusion" = "success" ]; then
-                ok=1
                 break
               fi
               if [ "$conclusion" = "failure" ]; then
@@ -35,23 +36,13 @@ jobs:
               fi
               sleep 20
             done
-            if [ -z "$ok" ]; then
+            if [ "$conclusion" != "success" ]; then
               echo "::error::Timed out waiting for $wf."
               exit 1
             fi
+            echo "Downloading artifacts from run $run_id ($wf)"
+            gh run download "$run_id" -D dist
           done
-
-      - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: voxd-windows
-          path: dist/windows
-
-      - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: voxd-linux
-          path: dist/linux
 
       - name: Remove stale release
         env:

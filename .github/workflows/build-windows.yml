@@ -38,8 +38,13 @@ jobs:
         env:
           VOXD_VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          SET PATH=%PATH%;C:\Program Files (x86)\Inno Setup 6
-          iscc /DMyAppVersion=%VOXD_VERSION% installers\windows\voxd.iss
+          set "ISCC=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if exist "%ISCC%" (
+            "%ISCC%" /DMyAppVersion=%VOXD_VERSION% installers\windows\voxd.iss
+          ) else (
+            where iscc
+            iscc /DMyAppVersion=%VOXD_VERSION% installers\windows\voxd.iss
+          )
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

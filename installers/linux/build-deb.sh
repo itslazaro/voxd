@@ -90,6 +90,8 @@ EOF
 # --- app payload ---
 cp -r app "$STAGE/usr/share/voxd/app"
 cp -r assets "$STAGE/usr/share/voxd/assets"
+mkdir -p "$STAGE/usr/share/voxd/config"
+cp config/default.yaml "$STAGE/usr/share/voxd/config/default.yaml"
 cp config/default.yaml "$STAGE/etc/voxd/default.yaml"
 
 # --- build python venv into the package ---

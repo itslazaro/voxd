@@ -31,7 +31,8 @@ mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" \
 # Payload
 cp -r app "$APPDIR/usr/lib/voxd/app"
 cp -r assets "$APPDIR/usr/lib/voxd/assets"
-cp config/default.yaml "$APPDIR/usr/lib/voxd/config-default.yaml"
+mkdir -p "$APPDIR/usr/lib/voxd/config"
+cp config/default.yaml "$APPDIR/usr/lib/voxd/config/default.yaml"
 cp scripts/setup_whisper.py "$APPDIR/usr/lib/voxd/setup_whisper.py"
 
 cat > "$APPDIR/usr/bin/voxd" <<EOF

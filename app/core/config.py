@@ -38,8 +38,18 @@ def project_root() -> Path:
 
 
 def default_config_path() -> Path:
-    """Path to the bundled config/default.yaml."""
-    return project_root() / "config" / DEFAULT_CONFIG_NAME
+    """Path to the bundled config/default.yaml, searching known install layouts."""
+    root = project_root()
+    candidates = [
+        root / "config" / DEFAULT_CONFIG_NAME,          # source tree / one-folder build
+        root / "config-default.yaml",                    # AppImage layout
+        Path("/etc") / APP_NAME.lower() / DEFAULT_CONFIG_NAME,  # deb layout
+    ]
+    for cand in candidates:
+        if cand.is_file():
+            return cand
+    # Fall back to the canonical path so the error message is meaningful.
+    return root / "config" / DEFAULT_CONFIG_NAME
 
 
 def _xdg_config_home() -> Path:

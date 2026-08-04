@@ -8,6 +8,17 @@ All notable changes to VOXD are documented here. The format follows
 
 - macOS support (planned)
 
+## [1.0.2] — 2026-08-05
+
+### Fixed
+
+- **Linux installs crashed at startup** with `Configuration error: Default
+  config not found` — the AppImage and `.deb` bundled `default.yaml` at the
+  wrong path while the app looked for `config/default.yaml` next to the app
+  root. Both packagers now bundle config at the expected path, and
+  `default_config_path()` falls back to the AppImage/deb layouts if needed
+  (`app/core/config.py`).
+
 ## [1.0.1] — 2026-08-04
 
 ### Added
@@ -89,6 +100,7 @@ cross-platform desktop application.
 - Local-first: no audio upload, no telemetry, no API keys.
 - Model downloads pinned to HTTPS (ggml-org mirror).
 
-[Unreleased]: https://github.com/itslazaro/voxd/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/itslazaro/voxd/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/itslazaro/voxd/releases/tag/v1.0.2
 [1.0.1]: https://github.com/itslazaro/voxd/releases/tag/v1.0.1
 [1.0.0]: https://github.com/itslazaro/voxd/releases/tag/v1.0.0

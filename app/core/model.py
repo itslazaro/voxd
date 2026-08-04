@@ -16,12 +16,30 @@ log = logging.getLogger(__name__)
 
 # Known small models available from whisper.cpp's release mirror.
 MODELS = {
-    "tiny.en": ("ggml-tiny.en.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin"),
-    "tiny": ("ggml-tiny.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin"),
-    "base.en": ("ggml-base.en.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"),
-    "base": ("ggml-base.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"),
-    "small.en": ("ggml-small.en.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin"),
-    "small": ("ggml-small.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin"),
+    "tiny.en": (
+        "ggml-tiny.en.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin",
+    ),
+    "tiny": (
+        "ggml-tiny.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
+    ),
+    "base.en": (
+        "ggml-base.en.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin",
+    ),
+    "base": (
+        "ggml-base.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+    ),
+    "small.en": (
+        "ggml-small.en.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin",
+    ),
+    "small": (
+        "ggml-small.bin",
+        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
+    ),
 }
 
 

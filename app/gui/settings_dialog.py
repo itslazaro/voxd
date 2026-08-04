@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from PySide6.QtWidgets import (
@@ -23,6 +24,9 @@ from PySide6.QtWidgets import (
 
 from app.core.config import save_user_config
 from app.core.model import MODELS, list_models
+from app.services.autostart import autostart_enabled, disable_autostart, enable_autostart
+
+log = logging.getLogger(__name__)
 
 
 class SettingsDialog(QDialog):
@@ -162,9 +166,16 @@ class SettingsDialog(QDialog):
         self.autostart = QCheckBox("Start daemon on launch")
         self.autostart.setChecked(bool(a.get("autostart_daemon", True)))
 
+        self.login_autostart = QCheckBox("Start VOXD at login")
+        self.login_autostart.setChecked(autostart_enabled())
+        self.login_autostart.setToolTip(
+            "Launch VOXD automatically when you log in (no terminal needed)."
+        )
+
         box = QVBoxLayout()
         box.addWidget(self.start_minimized)
         box.addWidget(self.autostart)
+        box.addWidget(self.login_autostart)
         form.addRow("Behaviour", self._wrap(box))
 
         self.log_level = QComboBox()
@@ -205,6 +216,12 @@ class SettingsDialog(QDialog):
         conf["cleanup"]["collapse_spaces"] = self.collapse.isChecked()
         conf["app"]["start_minimized"] = self.start_minimized.isChecked()
         conf["app"]["autostart_daemon"] = self.autostart.isChecked()
+
+        if self.login_autostart.isChecked():
+            if not enable_autostart():
+                log.warning("Could not enable login autostart")
+        else:
+            disable_autostart()
         conf["app"]["log_level"] = self.log_level.currentText()
 
         save_user_config(conf)

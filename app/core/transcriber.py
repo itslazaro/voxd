@@ -46,8 +46,7 @@ def find_whisper_bin() -> str:
         return found
 
     raise TranscriptionError(
-        "whisper-cli not found. Run the VOXD setup to build it, or set "
-        "whisper.bin in config.yaml."
+        "whisper-cli not found. Run the VOXD setup to build it, or set whisper.bin in config.yaml."
     )
 
 

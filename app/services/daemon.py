@@ -58,14 +58,27 @@ class Daemon:
 
     def run(self) -> None:
         """Block forever, servicing the engine. Used by the daemon entrypoint."""
+        import os
+
+        from app.services.pidfile import remove_pidfile, write_pidfile
+
         self.install()
-        log.info("VOXD daemon running (pid=%s)", __import__("os").getpid())
+        try:
+            write_pidfile()
+        except OSError:
+            log.warning("Could not write pidfile", exc_info=True)
+        log.info("VOXD daemon running (pid=%s)", os.getpid())
         try:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
             log.info("Shutting down")
             self.engine.shutdown()
+        finally:
+            try:
+                remove_pidfile()
+            except OSError:
+                log.warning("Could not remove pidfile", exc_info=True)
 
     def serve_inline(self) -> None:
         """Non-blocking setup for embedding in a GUI process."""

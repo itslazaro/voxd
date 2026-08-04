@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import platform
 import sys
 import threading
 
@@ -28,13 +27,20 @@ class VoxdApplication:
         self.conf = conf
         self.qt = QApplication.instance() or QApplication(sys.argv)
         self.qt.setApplicationName("VOXD")
+        # Tray-first app: never quit just because no window is visible.
+        self.qt.setQuitOnLastWindowClosed(False)
 
         self.engine = build_engine(conf)
         self.engine._on_state_change = self._on_state_change
 
         icon_path = self._icon_path()
         self.tray = VoxdTray(icon_path)
-        self.daemon = Daemon(self.engine, enable_signals=platform.system() == "Linux")
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            log.warning("No system tray detected; running headless (tray menu unavailable)")
+        # In GUI mode the Qt event loop blocks plain signal handlers, so we
+        # disable the daemon's signal mode and use a Qt-aware bridge instead.
+        self.daemon = Daemon(self.engine, enable_signals=False)
+        self._signal_bridge = None
         self.hotkeys = HotkeyService(
             on_toggle=self.toggle,
             key=conf.get("hotkey", {}).get("key", "f8"),
@@ -136,7 +142,21 @@ class VoxdApplication:
     # -- lifecycle ------------------------------------------------------
 
     def start(self) -> None:
+        from app.services.pidfile import write_pidfile
+
+        try:
+            write_pidfile()
+            log.info("pidfile written")
+        except OSError:
+            log.warning("Could not write pidfile", exc_info=True)
         self.daemon.serve_inline()
+        from app.services.signal_bridge import QtSignalBridge
+
+        self._signal_bridge = QtSignalBridge(
+            on_start=self.engine.start_recording,
+            on_stop=self.engine.stop_recording,
+        )
+        self._signal_bridge.install()
         self.hotkeys.start()
         self.tray.show()
         if not self._autostart or not self.conf.get("app", {}).get("start_minimized", True):
@@ -148,8 +168,17 @@ class VoxdApplication:
         return self.qt.exec()
 
     def quit(self) -> None:
+        from app.services.pidfile import remove_pidfile
+
         self.engine.shutdown()
+        if self._signal_bridge is not None:
+            self._signal_bridge.remove()
+            self._signal_bridge = None
         self.hotkeys.stop()
+        try:
+            remove_pidfile()
+        except OSError:
+            log.warning("Could not remove pidfile", exc_info=True)
         self.qt.quit()
 
 

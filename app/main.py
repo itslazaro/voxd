@@ -105,9 +105,16 @@ def cmd_daemon(args) -> int:
 
 
 def cmd_toggle(args) -> int:
-    """Toggle dictation from an external trigger (GNOME keybinding, tray)."""
-    # The real work happens inside the resident process (daemon or GUI).
-    # When launched standalone we signal an existing daemon, or run one-off.
+    """Toggle dictation from an external trigger (GNOME keybinding, tray).
+
+    Prefers the pidfile path (signal the running instance directly, no
+    systemd required) and falls back to the systemd user service.
+    """
+    from app.services.pidfile import send_toggle
+
+    if send_toggle(force_start=args.start, force_stop=args.stop):
+        return 0
+    # Fallback: systemd user service (legacy/installed deployments).
     _signal_running_daemon(args.start and "SIGUSR1" or "SIGUSR2")
     return 0
 

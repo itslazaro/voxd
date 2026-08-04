@@ -2,7 +2,9 @@
 ; Build: iscc installers\windows\voxd.iss  (after running build-exe.cmd)
 
 #define MyAppName "VOXD"
+#ifndef MyAppVersion
 #define MyAppVersion "1.0.0"
+#endif
 #define MyAppPublisher "VOXD contributors"
 #define MyAppExeName "VOXD.exe"
 

@@ -4,6 +4,9 @@
 your words locally with Whisper and types them into any application — your
 browser, terminal, editor, or chat window.
 
+[![Release](https://img.shields.io/github/v/release/itslazaro/voxd)](https://github.com/itslazaro/voxd/releases)
+[![CI](https://github.com/itslazaro/voxd/actions/workflows/ci.yml/badge.svg)](https://github.com/itslazaro/voxd/actions)
+
 - **Local-first.** Audio is transcribed on your machine. Nothing is uploaded
   unless you explicitly enable a cloud backend.
 - **System tray app** with live status: 🎤 Ready · 🔴 Listening · 🧠 Transcribing
@@ -29,6 +32,27 @@ browser, terminal, editor, or chat window.
 | Windows .exe + Inno installer | ✅ |
 | CI/CD (GitHub Actions) | ✅ |
 | macOS | 🔜 Planned |
+
+---
+
+## Download
+
+Grab the latest build from the
+[Releases page](https://github.com/itslazaro/voxd/releases). Every tagged
+release publishes ready-to-run installers built by CI:
+
+| Platform | File | Notes |
+|---|---|---|
+| Windows | `VOXD-<version>-Setup.exe` | Recommended — Inno Setup installer, adds Start Menu / desktop shortcuts |
+| Windows | `VOXD/` folder | Portable PyInstaller build, no install needed |
+| Linux | `VOXD-<version>-amd64.deb` | Debian/Ubuntu package |
+| Linux | `VOXD-<version>-x86_64.AppImage` | Portable, works on most distros |
+
+No release yet? The CI also lets you build artifacts on demand — go to the
+**Actions** tab, pick the *Build Windows (exe + installer)* or *Build Linux*
+workflow, and hit **Run workflow**. The output files appear under the run's
+**Artifacts** (they expire after a few days; a tagged release keeps them
+forever).
 
 ---
 
@@ -74,7 +98,10 @@ verification transcription.
 
 ### Windows
 
-1. Run `VOXD-1.0.0-Setup.exe` (Inno Setup) or unzip the PyInstaller build.
+1. Download `VOXD-<version>-Setup.exe` from the
+   [Releases page](https://github.com/itslazaro/voxd/releases) (or unzip the
+   portable build). Run the installer — it creates a `VOXD` entry in the
+   Start Menu and, optionally, a desktop icon and login autostart.
 2. Open a terminal in the install dir and run:
    ```powershell
    .\VOXD.exe setup

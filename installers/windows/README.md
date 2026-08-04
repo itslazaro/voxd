@@ -20,6 +20,18 @@ installers\windows\build-exe.cmd
 This creates the venv, installs dependencies, runs PyInstaller, and — if `iscc`
 is found — produces the installer.
 
+## Publishing a release (so users can download)
+
+1. Bump the version in `app/__init__.py` (and `pyproject.toml`).
+2. Tag and push: `git tag v1.0.1 && git push origin v1.0.1`.
+3. CI (`.github/workflows/build-windows.yml`) builds `VOXD.exe` and
+   `VOXD-<ver>-Setup.exe`, then attaches them to a GitHub Release.
+
+Users download the `*-Setup.exe` from the
+[Releases page](https://github.com/itslazaro/voxd/releases). For a build without
+tagging, run the *Build Windows* workflow from the Actions tab and grab the
+artifacts.
+
 ## Runtime notes
 
 - The first run needs Whisper: run `VOXD.exe setup` (or the bundled

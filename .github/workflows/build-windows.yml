@@ -35,9 +35,11 @@ jobs:
 
       - name: Build installer
         shell: cmd
+        env:
+          VOXD_VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           SET PATH=%PATH%;C:\Program Files (x86)\Inno Setup 6
-          iscc installers\windows\voxd.iss
+          iscc /DMyAppVersion=%VOXD_VERSION% installers\windows\voxd.iss
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

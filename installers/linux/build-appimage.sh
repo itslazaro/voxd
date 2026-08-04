@@ -70,4 +70,16 @@ echo "Running linuxdeploy..."
   --desktop-file "$APPDIR/usr/share/applications/voxd.desktop" \
   --icon-file "$APPDIR/usr/share/icons/hicolor/scalable/apps/voxd.svg" \
   --output appimage
+
+# linuxdeploy writes <Name>-<arch>.AppImage into the CWD (named after the
+# desktop file); move it to our canonical output path.
+generated="$(find . -maxdepth 1 -name '*.AppImage' -print -quit 2>/dev/null || true)"
+if [ -n "$generated" ] && [ "$generated" != "$APPIMAGE" ]; then
+  mv -f "$generated" "$APPIMAGE"
+fi
+
+if [ ! -f "$APPIMAGE" ]; then
+  echo "error: AppImage was not produced at $APPIMAGE" >&2
+  exit 1
+fi
 echo "Built $APPIMAGE"
